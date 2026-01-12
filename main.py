@@ -198,7 +198,7 @@ if run_button:
     runtime = time.time() - start_time
     best_routes = decode_particle(best_position)
 
-    st.subheader("📊 Performance Metrics")
+    st.subheader("Performance Metrics")
 
     col1, col2, col3, col4 = st.columns(4)
     col1.metric("Best Distance", f"{best_distance:.4f}")
