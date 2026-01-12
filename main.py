@@ -19,7 +19,7 @@ st.set_page_config(
     layout="wide"
 )
 
-st.title("🚚 Particle Swarm Optimization for CVRP")
+st.title("Particle Swarm Optimization for CVRP")
 st.markdown("Interactive dashboard to explore PSO performance and vehicle routing solutions.")
 
 # ============================================================
@@ -175,7 +175,7 @@ def plot_routes(routes, data):
 # ============================================================
 # Sidebar Controls
 # ============================================================
-st.sidebar.header("⚙️ PSO Parameters")
+st.sidebar.header("PSO Parameters")
 
 num_particles = st.sidebar.slider("Number of Particles", 5, 50, 15)
 iterations = st.sidebar.slider("Iterations", 20, 200, 80)
@@ -183,7 +183,7 @@ w = st.sidebar.slider("Inertia Weight (w)", 0.1, 1.0, 0.4)
 c1 = st.sidebar.slider("Cognitive Coefficient (c1)", 0.5, 3.0, 2.0)
 c2 = st.sidebar.slider("Social Coefficient (c2)", 0.5, 3.0, 2.0)
 
-run_button = st.sidebar.button("🚀 Run PSO")
+run_button = st.sidebar.button("Run PSO")
 
 # ============================================================
 # Run PSO
@@ -206,11 +206,11 @@ if run_button:
     col3.metric("Runtime (s)", f"{runtime:.3f}")
     col4.metric("Vehicle Capacity", CAPACITY)
 
-    st.subheader("🚚 Vehicle Routes")
+    st.subheader("Vehicle Routes")
     for i, route in enumerate(best_routes):
         st.write(f"**Route {i+1}:** {route}")
 
-    st.subheader("📉 Convergence Curve")
+    st.subheader("Convergence Curve")
     fig_conv, ax = plt.subplots(figsize=(6, 4))
     ax.plot(convergence, linewidth=2)
     ax.set_xlabel("Iteration")
@@ -218,9 +218,9 @@ if run_button:
     ax.grid(True)
     st.pyplot(fig_conv)
 
-    st.subheader("🗺️ Vehicle Route Visualization")
+    st.subheader("Vehicle Route Visualization")
     fig_routes = plot_routes(best_routes, data)
     st.pyplot(fig_routes)
 
 else:
-    st.info("👈 Adjust PSO parameters and click **Run PSO** to start.")
+    st.info("Adjust PSO parameters and click **Run PSO** to start.")
