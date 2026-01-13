@@ -177,8 +177,8 @@ def plot_routes(routes, data):
 # ============================================================
 st.sidebar.header("PSO Parameters")
 
-num_particles = st.sidebar.slider("Number of Particles", 5, 50, 15)
-iterations = st.sidebar.slider("Iterations", 20, 200, 80)
+num_particles = st.sidebar.slider("Number of Particles", 10, 100, 50)
+iterations = st.sidebar.slider("Iterations", 20, 200, 100)
 w = st.sidebar.slider("Inertia Weight (w)", 0.1, 1.0, 0.4)
 c1 = st.sidebar.slider("Cognitive Coefficient (c1)", 0.5, 3.0, 2.0)
 c2 = st.sidebar.slider("Social Coefficient (c2)", 0.5, 3.0, 2.0)
