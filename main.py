@@ -1,5 +1,6 @@
 # ============================================================
-# Streamlit Dashboard for PSO - CVRP
+# Streamlit Dashboard for PSO-CVRP
+# Synced with Google Colab Result
 # ============================================================
 
 import streamlit as st
@@ -11,14 +12,24 @@ import matplotlib.pyplot as plt
 import time
 
 # ============================================================
-# Random Seed
+# PAGE CONFIG
 # ============================================================
-RANDOM_SEED = 42
-np.random.seed(RANDOM_SEED)
-random.seed(RANDOM_SEED)
+st.set_page_config(page_title="PSO-CVRP Dashboard", layout="wide")
+
+st.title("🚚 Particle Swarm Optimization for CVRP")
+st.markdown("This dashboard runs **exactly same logic as Google Colab** to ensure equal Best Distance results.")
 
 # ============================================================
-# Dataset
+# GLOBAL FIXED SEED (MUST MATCH COLAB)
+# ============================================================
+GLOBAL_SEED = 42
+np.random.seed(GLOBAL_SEED)
+random.seed(GLOBAL_SEED)
+
+rng = np.random.RandomState(GLOBAL_SEED)
+
+# ============================================================
+# LOAD DATA
 # ============================================================
 @st.cache_data
 def load_data():
@@ -30,7 +41,7 @@ coords = data[["x", "y"]].values
 CAPACITY = 30
 
 # ============================================================
-# Distance Matrix
+# DISTANCE MATRIX
 # ============================================================
 @st.cache_data
 def compute_distance_matrix(coords):
@@ -44,7 +55,7 @@ def compute_distance_matrix(coords):
 distance_matrix = compute_distance_matrix(coords)
 
 # ============================================================
-# Helper Functions
+# HELPER FUNCTIONS
 # ============================================================
 def decode_particle(position):
     order = np.argsort(position)
@@ -80,11 +91,12 @@ def fitness(position):
     return total_distance(decode_particle(position))
 
 # ============================================================
-# PSO
+# PSO ALGORITHM
 # ============================================================
 def run_pso(num_particles, iterations, w, c1, c2):
     DIM = len(customers)
-    particles = np.random.rand(num_particles, DIM)
+
+    particles = rng.rand(num_particles, DIM)
     velocities = np.zeros((num_particles, DIM))
 
     pbest = particles.copy()
@@ -113,66 +125,92 @@ def run_pso(num_particles, iterations, w, c1, c2):
                 pbest[i] = particles[i].copy()
                 pbest_fit[i] = fit
                 if fit < gbest_fit:
-                    gbest = particles[i].copy()
-                    gbest_fit = fit
+                    gbest, gbest_fit = particles[i].copy(), fit
 
         convergence.append(gbest_fit)
 
     return gbest, gbest_fit, convergence
 
 # ============================================================
-# Evaluation (Same As Colab)
+# PARAMETER TUNING (SAME AS COLAB)
 # ============================================================
 def evaluate_pso(num_particles, iterations, w, c1, c2, runs=2):
     best_distance = float("inf")
     best_position = None
     best_convergence = None
+    distances = []
 
     for _ in range(runs):
         pos, dist, convergence = run_pso(num_particles, iterations, w, c1, c2)
+        distances.append(dist)
+
         if dist < best_distance:
             best_distance = dist
             best_position = pos
             best_convergence = convergence
 
-    return best_distance, best_position, best_convergence
+    return np.mean(distances), best_distance, best_position, best_convergence
+
+
+def parameter_search():
+
+    particle_list = [10, 20, 50]
+    iteration_list = [50, 100, 200]
+    w_list = [0.4, 0.6, 0.8]
+    c1_list = [1.5, 2.0, 3.0]
+    c2_list = [1.5, 2.0, 3.0]
+
+    best_overall = float("inf")
+    best_setting = None
+    best_position = None
+    best_convergence = None
+
+    for npart in particle_list:
+        for it in iteration_list:
+            for w in w_list:
+                for c1 in c1_list:
+                    for c2 in c2_list:
+
+                        avg_d, best_d, pos, convergence = evaluate_pso(
+                            npart, it, w, c1, c2
+                        )
+
+                        if best_d < best_overall:
+                            best_overall = best_d
+                            best_setting = (npart, it, w, c1, c2)
+                            best_position = pos
+                            best_convergence = convergence
+
+    return best_setting, best_overall, best_position, best_convergence
 
 # ============================================================
-# Streamlit UI
+# STREAMLIT UI
 # ============================================================
-st.title("🚚 Particle Swarm Optimization for CVRP")
-st.write("This dashboard reproduces **exact same behaviour as Google Colab**.")
+st.sidebar.header("🎯 PSO Controls")
+run_search = st.sidebar.button("Run Parameter Tuning (Same as Colab)")
 
-# Sidebar Fixed Parameters (Same As Report)
-st.sidebar.header("PSO Parameters (Fixed to Match Report)")
-num_particles = st.sidebar.selectbox("Particles", [10,20,50], index=2)
-iterations = st.sidebar.selectbox("Iterations", [50,100,200], index=0)
-w = st.sidebar.selectbox("Inertia Weight", [0.4,0.6,0.8], index=0)
-c1 = st.sidebar.selectbox("C1", [1.5,2.0,3.0], index=0)
-c2 = st.sidebar.selectbox("C2", [1.5,2.0,3.0], index=0)
+if run_search:
 
-runs = st.sidebar.slider("Repetition (Like Colab evaluate)", 1,5,2)
-
-if st.sidebar.button("Run PSO"):
     start = time.time()
-    best_distance, position, convergence = evaluate_pso(num_particles, iterations, w, c1, c2, runs)
-    runtime = time.time() - start
-    routes = decode_particle(position)
+    best_setting, best_distance, best_position, best_convergence = parameter_search()
+    end = time.time()
 
-    st.subheader("📊 Performance")
-    col1,col2,col3 = st.columns(3)
-    col1.metric("Best Distance", f"{best_distance:.4f}")
-    col2.metric("Routes", len(routes))
-    col3.metric("Runtime (s)", f"{runtime:.3f}")
+    num_particles, iterations, w, c1, c2 = best_setting
+    best_routes = decode_particle(best_position)
 
-    st.subheader("🚚 Routes")
-    for i,r in enumerate(routes):
-        st.write(f"Route {i+1}: {r}")
+    st.success("Parameter Search Completed (Same as Colab)")
+    st.write(f"Best Distance: **{best_distance:.4f}**")
+    st.write(f"Runtime: **{end-start:.2f} seconds**")
 
-    st.subheader("📉 Convergence Curve")
-    fig, ax = plt.subplots()
-    ax.plot(convergence)
+    st.write("Best Parameters:")
+    st.write(best_setting)
+
+    fig_conv, ax = plt.subplots()
+    ax.plot(best_convergence)
     ax.set_xlabel("Iteration")
     ax.set_ylabel("Best Distance")
-    st.pyplot(fig)
+    st.pyplot(fig_conv)
 
+    st.subheader("Vehicle Routes")
+    for i, r in enumerate(best_routes):
+        st.write(f"Route {i+1}: {r}")
