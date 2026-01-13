@@ -140,9 +140,9 @@ def plot_routes(routes, data):
     depot = data[data['node_type'] == 'depot'].iloc[0]
     customers_plot = data[data['node_type'] == 'customer']
 
-    # Customers (CYAN)
+    # Customers (BLACK)
     ax.scatter(customers_plot['x'], customers_plot['y'],
-               color='cyan', label="Customers")
+               color='black', label="Customers")
 
     # Depot (RED)
     ax.scatter(depot['x'], depot['y'],
@@ -159,8 +159,8 @@ def plot_routes(routes, data):
         ax.plot(
             xs, ys,
             marker='o',
-            markerfacecolor='cyan',
-            markeredgecolor='cyan',
+            markerfacecolor='black',
+            markeredgecolor='black',
             label=f"Route {idx+1}"
         )
 
