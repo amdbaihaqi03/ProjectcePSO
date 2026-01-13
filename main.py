@@ -159,8 +159,8 @@ def plot_routes(routes, data):
         ax.plot(
             xs, ys,
             marker='o',
-            markerfacecolor='black',
-            markeredgecolor='black',
+            markerfacecolor='yellow',
+            markeredgecolor='yellow',
             label=f"Route {idx+1}"
         )
 
