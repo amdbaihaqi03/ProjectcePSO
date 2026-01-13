@@ -1,5 +1,5 @@
 # ============================================================
-# Streamlit Dashboard for PSO-CVRP
+# Streamlit Dashboard for PSO-VRP
 # Course: JIE42903 – Evolutionary Computing
 # ============================================================
 
@@ -15,11 +15,11 @@ import time
 # Page Configuration
 # ============================================================
 st.set_page_config(
-    page_title="PSO-CVRP Dashboard",
+    page_title="PSO-VRP Dashboard",
     layout="wide"
 )
 
-st.title("Particle Swarm Optimization for CVRP")
+st.title("Particle Swarm Optimization for ")
 st.markdown("Interactive dashboard to explore PSO performance and vehicle routing solutions.")
 
 # ============================================================
