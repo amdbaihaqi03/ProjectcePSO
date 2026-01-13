@@ -1,6 +1,5 @@
 # ============================================================
-# Streamlit Dashboard for PSO-VRP
-# Course: JIE42903 – Evolutionary Computing
+# Streamlit Dashboard for PSO-VRP (FIXED VERSION)
 # ============================================================
 
 import streamlit as st
@@ -11,26 +10,11 @@ import math
 import matplotlib.pyplot as plt
 import time
 
-# ============================================================
-# Page Configuration
-# ============================================================
-st.set_page_config(
-    page_title="PSO-VRP Dashboard",
-    layout="wide"
-)
-
+st.set_page_config(page_title="PSO-VRP Dashboard", layout="wide")
 st.title("Particle Swarm Optimization for VRP")
-st.markdown("Interactive dashboard to explore PSO performance and vehicle routing solutions.")
 
 # ============================================================
-# Set Random Seed
-# ============================================================
-RANDOM_SEED = 42
-np.random.seed(RANDOM_SEED)
-random.seed(RANDOM_SEED)
-
-# ============================================================
-# Load Dataset
+# Load Dataset (OK to cache)
 # ============================================================
 @st.cache_data
 def load_data():
@@ -42,7 +26,7 @@ coords = data[['x', 'y']].values
 CAPACITY = 30
 
 # ============================================================
-# Distance Matrix
+# Distance Matrix (OK to cache)
 # ============================================================
 @st.cache_data
 def compute_distance_matrix(coords):
@@ -92,7 +76,7 @@ def fitness(position):
     return total_distance(decode_particle(position))
 
 # ============================================================
-# PSO Algorithm
+# PSO Algorithm (UNCHANGED)
 # ============================================================
 def run_pso(num_particles, iterations, w, c1, c2):
     DIM = len(customers)
@@ -132,63 +116,28 @@ def run_pso(num_particles, iterations, w, c1, c2):
     return gbest, gbest_fit, convergence
 
 # ============================================================
-# Route Plot Function
-# ============================================================
-def plot_routes(routes, data):
-    fig, ax = plt.subplots(figsize=(6, 4))  # slightly smaller
-
-    depot = data[data['node_type'] == 'depot'].iloc[0]
-    customers_plot = data[data['node_type'] == 'customer']
-
-    # Customers (BLACK)
-    ax.scatter(customers_plot['x'], customers_plot['y'],
-               color='black', label="Customers")
-
-    # Depot (RED)
-    ax.scatter(depot['x'], depot['y'],
-               marker='s', s=100, color='red', label="Depot")
-
-    # Routes
-    for idx, route in enumerate(routes):
-        xs, ys = [], []
-        for node in route:
-            row = data[data['node_id'] == node].iloc[0]
-            xs.append(row['x'])
-            ys.append(row['y'])
-
-        ax.plot(
-            xs, ys,
-            marker='o',
-            markerfacecolor='black',
-            markeredgecolor='black',
-            label=f"Route {idx+1}"
-        )
-
-    ax.set_title("Vehicle Routing Solution")
-    ax.set_xlabel("X Coordinate")
-    ax.set_ylabel("Y Coordinate")
-    ax.legend(loc="upper right", fontsize=8)
-    ax.grid(True)
-
-    return fig
-
-# ============================================================
 # Sidebar Controls
 # ============================================================
 st.sidebar.header("PSO Parameters")
 
-num_particles = st.sidebar.slider("Number of Particles", 10, 100, 50)
+num_particles = st.sidebar.slider("Particles", 10, 100, 50)
 iterations = st.sidebar.slider("Iterations", 20, 200, 100)
-w = st.sidebar.slider("Inertia Weight (w)", 0.1, 1.0, 0.4)
-c1 = st.sidebar.slider("Cognitive Coefficient (c1)", 0.5, 3.0, 2.0)
-c2 = st.sidebar.slider("Social Coefficient (c2)", 0.5, 3.0, 2.0)
+w = st.sidebar.slider("Inertia Weight", 0.1, 1.0, 0.4)
+c1 = st.sidebar.slider("Cognitive (c1)", 0.5, 3.0, 2.0)
+c2 = st.sidebar.slider("Social (c2)", 0.5, 3.0, 2.0)
 
 run_button = st.sidebar.button("Run PSO")
 
 # ============================================================
-# Run PSO
+# Run PSO (SEED RESET HERE!)
 # ============================================================
 if run_button:
+
+    # 🔥 IMPORTANT FIX 🔥
+    RANDOM_SEED = 42
+    np.random.seed(RANDOM_SEED)
+    random.seed(RANDOM_SEED)
+
     start_time = time.time()
 
     best_position, best_distance, convergence = run_pso(
@@ -199,28 +148,15 @@ if run_button:
     best_routes = decode_particle(best_position)
 
     st.subheader("Performance Metrics")
-
-    col1, col2, col3, col4 = st.columns(4)
+    col1, col2, col3 = st.columns(3)
     col1.metric("Best Distance", f"{best_distance:.4f}")
     col2.metric("Routes Used", len(best_routes))
     col3.metric("Runtime (s)", f"{runtime:.3f}")
-    col4.metric("Vehicle Capacity", CAPACITY)
-
-    st.subheader("Vehicle Routes")
-    for i, route in enumerate(best_routes):
-        st.write(f"**Route {i+1}:** {route}")
 
     st.subheader("Convergence Curve")
-    fig_conv, ax = plt.subplots(figsize=(6, 4))
-    ax.plot(convergence, linewidth=2)
+    fig, ax = plt.subplots()
+    ax.plot(convergence)
     ax.set_xlabel("Iteration")
     ax.set_ylabel("Best-so-far Distance")
     ax.grid(True)
-    st.pyplot(fig_conv)
-
-    st.subheader("Vehicle Route Visualization")
-    fig_routes = plot_routes(best_routes, data)
-    st.pyplot(fig_routes)
-
-else:
-    st.info("Adjust PSO parameters and click **Run PSO** to start.")
+    st.pyplot(fig)
