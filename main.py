@@ -19,7 +19,7 @@ st.set_page_config(
     layout="wide"
 )
 
-st.title("Particle Swarm Optimization for ")
+st.title("Particle Swarm Optimization for VSP")
 st.markdown("Interactive dashboard to explore PSO performance and vehicle routing solutions.")
 
 # ============================================================
