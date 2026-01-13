@@ -142,7 +142,7 @@ def plot_routes(routes, data):
 
     # Customers (BLACK)
     ax.scatter(customers_plot['x'], customers_plot['y'],
-               color='black', label="Customers")
+               color='yellow', label="Customers")
 
     # Depot (RED)
     ax.scatter(depot['x'], depot['y'],
