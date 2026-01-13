@@ -144,9 +144,9 @@ def plot_routes(routes, data):
     ax.scatter(customers_plot['x'], customers_plot['y'],
                color='black', label="Customers")
 
-    # Depot (YELLOW)
+    # Depot (RED)
     ax.scatter(depot['x'], depot['y'],
-               marker='s', s=100, color='yellow', label="Depot")
+               marker='s', s=100, color='red', label="Depot")
 
     # Routes
     for idx, route in enumerate(routes):
