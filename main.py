@@ -135,7 +135,7 @@ def run_pso(num_particles, iterations, w, c1, c2):
 # Route  Function
 # ============================================================
 def _routes(routes, data):
-    fig, ax = plt.subplots(figsize=(5, 3))  # slightly smaller
+    fig, ax = plt.subplots(figsize=(3, 3))  # slightly smaller
 
     depot = data[data['node_type'] == 'depot'].iloc[0]
     customers_plot = data[data['node_type'] == 'customer']
