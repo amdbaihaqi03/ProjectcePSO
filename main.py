@@ -132,10 +132,10 @@ def run_pso(num_particles, iterations, w, c1, c2):
     return gbest, gbest_fit, convergence
 
 # ============================================================
-# Route Plot Function
+# Route  Function
 # ============================================================
-def plot_routes(routes, data):
-    fig, ax = plt.subplots(figsize=(6, 3))  # slightly smaller
+def _routes(routes, data):
+    fig, ax = plt.subplots(figsize=(5, 3))  # slightly smaller
 
     depot = data[data['node_type'] == 'depot'].iloc[0]
     customers_plot = data[data['node_type'] == 'customer']
