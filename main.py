@@ -211,7 +211,7 @@ if run_button:
         st.write(f"**Route {i+1}:** {route}")
 
     st.subheader("Convergence Curve")
-    fig_conv, ax = plt.subplots(figsize=(6, 4))
+    fig_conv, ax = plt.subplots(figsize=(7, 3))
     ax.plot(convergence, linewidth=2)
     ax.set_xlabel("Iteration")
     ax.set_ylabel("Best-so-far Distance")
