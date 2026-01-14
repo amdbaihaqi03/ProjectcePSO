@@ -1,6 +1,6 @@
 # ============================================================
-# Streamlit Dashboard for PSO-CVRP
-# Synced with Google Colab Result
+# Streamlit Dashboard for PSO-VRP
+# Course: JIE42903 – Evolutionary Computing
 # ============================================================
 
 import streamlit as st
@@ -12,36 +12,37 @@ import matplotlib.pyplot as plt
 import time
 
 # ============================================================
-# PAGE CONFIG
+# Page Configuration
 # ============================================================
-st.set_page_config(page_title="PSO-CVRP Dashboard", layout="wide")
+st.set_page_config(
+    page_title="PSO-VRP Dashboard",
+    layout="wide"
+)
 
-st.title("🚚 Particle Swarm Optimization for CVRP")
-st.markdown("This dashboard runs **exactly same logic as Google Colab** to ensure equal Best Distance results.")
-
-# ============================================================
-# GLOBAL FIXED SEED (MUST MATCH COLAB)
-# ============================================================
-GLOBAL_SEED = 42
-np.random.seed(GLOBAL_SEED)
-random.seed(GLOBAL_SEED)
-
-rng = np.random.RandomState(GLOBAL_SEED)
+st.title("Particle Swarm Optimization for VRP")
+st.markdown("Interactive dashboard to explore PSO performance and vehicle routing solutions.")
 
 # ============================================================
-# LOAD DATA
+# Set Random Seed
+# ============================================================
+RANDOM_SEED = 42
+np.random.seed(RANDOM_SEED)
+random.seed(RANDOM_SEED)
+
+# ============================================================
+# Load Dataset
 # ============================================================
 @st.cache_data
 def load_data():
     return pd.read_csv("vrp_raw_dataset.csv")
 
 data = load_data()
-customers = data[data["node_type"] == "customer"].reset_index(drop=True)
-coords = data[["x", "y"]].values
+customers = data[data['node_type'] == 'customer'].reset_index(drop=True)
+coords = data[['x', 'y']].values
 CAPACITY = 30
 
 # ============================================================
-# DISTANCE MATRIX
+# Distance Matrix
 # ============================================================
 @st.cache_data
 def compute_distance_matrix(coords):
@@ -55,15 +56,15 @@ def compute_distance_matrix(coords):
 distance_matrix = compute_distance_matrix(coords)
 
 # ============================================================
-# HELPER FUNCTIONS
+# Helper Functions
 # ============================================================
 def decode_particle(position):
     order = np.argsort(position)
     routes, route, load = [], [0], 0
 
     for idx in order:
-        cust_id = int(customers.loc[idx, "node_id"])
-        demand = customers.loc[idx, "demand"]
+        cust_id = int(customers.loc[idx, 'node_id'])
+        demand = customers.loc[idx, 'demand']
 
         if load + demand <= CAPACITY:
             route.append(cust_id)
@@ -91,12 +92,11 @@ def fitness(position):
     return total_distance(decode_particle(position))
 
 # ============================================================
-# PSO ALGORITHM
+# PSO Algorithm
 # ============================================================
 def run_pso(num_particles, iterations, w, c1, c2):
     DIM = len(customers)
-
-    particles = rng.rand(num_particles, DIM)
+    particles = np.random.rand(num_particles, DIM)
     velocities = np.zeros((num_particles, DIM))
 
     pbest = particles.copy()
@@ -132,85 +132,95 @@ def run_pso(num_particles, iterations, w, c1, c2):
     return gbest, gbest_fit, convergence
 
 # ============================================================
-# PARAMETER TUNING (SAME AS COLAB)
+# Route Plot Function
 # ============================================================
-def evaluate_pso(num_particles, iterations, w, c1, c2, runs=2):
-    best_distance = float("inf")
-    best_position = None
-    best_convergence = None
-    distances = []
+def plot_routes(routes, data):
+    fig, ax = plt.subplots(figsize=(6, 4))  # slightly smaller
 
-    for _ in range(runs):
-        pos, dist, convergence = run_pso(num_particles, iterations, w, c1, c2)
-        distances.append(dist)
+    depot = data[data['node_type'] == 'depot'].iloc[0]
+    customers_plot = data[data['node_type'] == 'customer']
 
-        if dist < best_distance:
-            best_distance = dist
-            best_position = pos
-            best_convergence = convergence
+    # Customers (BLACK)
+    ax.scatter(customers_plot['x'], customers_plot['y'],
+               color='black', label="Customers")
 
-    return np.mean(distances), best_distance, best_position, best_convergence
+    # Depot (RED)
+    ax.scatter(depot['x'], depot['y'],
+               marker='s', s=100, color='red', label="Depot")
 
+    # Routes
+    for idx, route in enumerate(routes):
+        xs, ys = [], []
+        for node in route:
+            row = data[data['node_id'] == node].iloc[0]
+            xs.append(row['x'])
+            ys.append(row['y'])
 
-def parameter_search():
+        ax.plot(
+            xs, ys,
+            marker='o',
+            markerfacecolor='black',
+            markeredgecolor='black',
+            label=f"Route {idx+1}"
+        )
 
-    particle_list = [10, 20, 50]
-    iteration_list = [50, 100, 200]
-    w_list = [0.4, 0.6, 0.8]
-    c1_list = [1.5, 2.0, 3.0]
-    c2_list = [1.5, 2.0, 3.0]
+    ax.set_title("Vehicle Routing Solution")
+    ax.set_xlabel("X Coordinate")
+    ax.set_ylabel("Y Coordinate")
+    ax.legend(loc="upper right", fontsize=8)
+    ax.grid(True)
 
-    best_overall = float("inf")
-    best_setting = None
-    best_position = None
-    best_convergence = None
-
-    for npart in particle_list:
-        for it in iteration_list:
-            for w in w_list:
-                for c1 in c1_list:
-                    for c2 in c2_list:
-
-                        avg_d, best_d, pos, convergence = evaluate_pso(
-                            npart, it, w, c1, c2
-                        )
-
-                        if best_d < best_overall:
-                            best_overall = best_d
-                            best_setting = (npart, it, w, c1, c2)
-                            best_position = pos
-                            best_convergence = convergence
-
-    return best_setting, best_overall, best_position, best_convergence
+    return fig
 
 # ============================================================
-# STREAMLIT UI
+# Sidebar Controls
 # ============================================================
-st.sidebar.header("🎯 PSO Controls")
-run_search = st.sidebar.button("Run Parameter Tuning (Same as Colab)")
+st.sidebar.header("PSO Parameters")
 
-if run_search:
+num_particles = st.sidebar.slider("Number of Particles", 10, 100, 50)
+iterations = st.sidebar.slider("Iterations", 20, 200, 100)
+w = st.sidebar.slider("Inertia Weight (w)", 0.1, 1.0, 0.4)
+c1 = st.sidebar.slider("Cognitive Coefficient (c1)", 0.5, 3.0, 2.0)
+c2 = st.sidebar.slider("Social Coefficient (c2)", 0.5, 3.0, 2.0)
 
-    start = time.time()
-    best_setting, best_distance, best_position, best_convergence = parameter_search()
-    end = time.time()
+run_button = st.sidebar.button("Run PSO")
 
-    num_particles, iterations, w, c1, c2 = best_setting
+# ============================================================
+# Run PSO
+# ============================================================
+if run_button:
+    start_time = time.time()
+
+    best_position, best_distance, convergence = run_pso(
+        num_particles, iterations, w, c1, c2
+    )
+
+    runtime = time.time() - start_time
     best_routes = decode_particle(best_position)
 
-    st.success("Parameter Search Completed (Same as Colab)")
-    st.write(f"Best Distance: **{best_distance:.4f}**")
-    st.write(f"Runtime: **{end-start:.2f} seconds**")
+    st.subheader("Performance Metrics")
 
-    st.write("Best Parameters:")
-    st.write(best_setting)
-
-    fig_conv, ax = plt.subplots()
-    ax.plot(best_convergence)
-    ax.set_xlabel("Iteration")
-    ax.set_ylabel("Best Distance")
-    st.pyplot(fig_conv)
+    col1, col2, col3, col4 = st.columns(4)
+    col1.metric("Best Distance", f"{best_distance:.4f}")
+    col2.metric("Routes Used", len(best_routes))
+    col3.metric("Runtime (s)", f"{runtime:.3f}")
+    col4.metric("Vehicle Capacity", CAPACITY)
 
     st.subheader("Vehicle Routes")
-    for i, r in enumerate(best_routes):
-        st.write(f"Route {i+1}: {r}")
+    for i, route in enumerate(best_routes):
+        st.write(f"**Route {i+1}:** {route}")
+
+    st.subheader("Convergence Curve")
+    fig_conv, ax = plt.subplots(figsize=(6, 4))
+    ax.plot(convergence, linewidth=2)
+    ax.set_xlabel("Iteration")
+    ax.set_ylabel("Best-so-far Distance")
+    ax.grid(True)
+    st.pyplot(fig_conv)
+
+    st.subheader("Vehicle Route Visualization")
+    fig_routes = plot_routes(best_routes, data)
+    st.pyplot(fig_routes)
+
+else:
+    st.info("Adjust PSO parameters and click **Run PSO** to start.")
